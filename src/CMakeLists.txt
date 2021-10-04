@@ -6,10 +6,17 @@ set(CMAKE_CXX_STANDARD 17)
 
 #add_subdirectory(tests)
 
-#include_directories(/usr/local/include)
-#link_directories(/usr/local/lib)
+include_directories(/usr/local/include)
+link_directories(/usr/local/lib)
 
 include_directories(external/curl/include)
+include_directories(/Users/overman/dev/github/vcpkg/packages/boost-optional_x64-osx/include)
+include_directories(/Users/overman/dev/github/vcpkg/packages/boost-assert_x64-osx/include)
+include_directories(/Users/overman/dev/github/vcpkg/packages/boost-core_x64-osx/include)
+include_directories(/Users/overman/dev/github/vcpkg/packages/boost-config_x64-osx/include)
+include_directories(/Users/overman/dev/github/vcpkg/packages/boost-static-assert_x64-osx/include)
+include_directories(/Users/overman/dev/github/vcpkg/packages/boost-exception_x64-osx/include)
+
 link_directories(external/curl/lib)
 
 add_library(dsj_utils
@@ -34,6 +41,8 @@ add_library(dsj_utils
         header/TimeMetric.h
         cpp/Rest.cpp
         header/Rest.h
+        cpp/RestServer.cpp
+        header/RestServer.h
         )
 
 add_executable(EasyArray tests/catch.hpp tests/EasyArray.cpp)

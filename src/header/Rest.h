@@ -15,9 +15,11 @@ namespace dsj {
     class RestClient {
     public:
         std::string get (std::string uri);
-        void get(std::string uri, std::function< void(std::string) > f);
+        void getAsync(std::string uri, std::function< void(std::string) > f);
 
         std::string post (std::string uri, const char *payload);
+        void postAsync(std::string uri, const char *payload, std::function< void(std::string) > f);
+
         RestClient();
     private:
         void validate(CURL *curl);

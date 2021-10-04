@@ -16,18 +16,6 @@ using namespace std;
 
 namespace dsj {
 
-    template <class R, class... Args>
-    struct CFunctionPointer
-    {
-        std::function<R(Args...)> func;
-
-        static R callback(void* context, Args... args)
-        {
-            const CFunctionPointer* unpackedThis = reinterpret_cast<const CFunctionPointer*>(context);
-            return unpackedThis->func(std::forward<Args>(args)...);
-        }
-    };
-
     /*
     curl https://reqbin.com/echo/get/json
     -H "X-Custom-Header: value"
@@ -54,17 +42,17 @@ namespace dsj {
 
     static string s_data;
 
-    static size_t onDataCallback(char* buf, size_t size, size_t nmemb, void* up) {
+    static size_t onDataCallback(char *buf, size_t size, size_t nmemb, void *up) {
         cout << s_data << endl;
-        for (int c = 0; c<size*nmemb; c++) {
+        for (int c = 0; c < size * nmemb; c++) {
             s_data.push_back(buf[c]);
         }
-        return size*nmemb;
+        return size * nmemb;
     }
 
     RestClient::RestClient() {}
 
-    std::string RestClient::get (std::string uri) {
+    std::string RestClient::get(std::string uri) {
 
 
         // When using libcurl's "easy" interface you init your session and get a handle
@@ -94,7 +82,7 @@ namespace dsj {
             // return until it is done (successfully or not).
             CURLcode res = curl_easy_perform(curl);
             validate(res);
-            data = s_data ;
+            data = s_data;
 
             // After the transfer has been made, you can set new options and
             // make another transfer, or if you're done, cleanup the session by
@@ -107,9 +95,9 @@ namespace dsj {
         return data;
     }
 
-    void RestClient::get (std::string uri, function<void(string raw)> handler) {
+    void RestClient::getAsync(std::string uri, function<void(string raw)> f) {
 
-        auto  wrapper = [&] () -> void {
+        auto wrapper = [this, uri, f]() -> void {
             CURL *curl = curl_easy_init();
             validate(curl);
             curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
@@ -122,19 +110,20 @@ namespace dsj {
                 CURLcode res = curl_easy_perform(curl);
                 validate(res);
                 curl_easy_cleanup(curl);
-                data = s_data ;
+                data = s_data;
                 s_data.clear();
                 m_mutex.unlock();
             }
-            handler(data);
+            f(data);
         };
 
-        thread t( wrapper);
+        thread t(wrapper);
         t.detach();
     }
 
 
-     std::string RestClient::post (std::string uri, const char *payload){
+    std::string RestClient::post(std::string uri, const char *payload) {
+
 
         CURL *curl = curl_easy_init();
         validate(curl);
@@ -143,25 +132,54 @@ namespace dsj {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long) strlen(payload));
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &onDataCallback);
-        CURLcode res = curl_easy_perform(curl);
 
-         validate(res);
-
-        curl_easy_cleanup(curl);
-        // Erases the contents of the string, which becomes an empty string
-        std::string data(s_data);
-        s_data.clear();
+        std::string data;
+        std::mutex m_mutex;
+        {
+            std::lock_guard<std::mutex> guard(m_mutex);
+            CURLcode res = curl_easy_perform(curl);
+            validate(res);
+            curl_easy_cleanup(curl);
+            data = s_data;
+            s_data.clear();
+        }
         return data;
+
+    }
+
+    void RestClient::postAsync(std::string uri, const char *payload, std::function<void(std::string)> f) {
+
+        auto wrapper = [this, uri,payload, f]() -> void {
+            CURL *curl = curl_easy_init();
+            validate(curl);
+            curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long) strlen(payload));
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &onDataCallback);
+            std::string data;
+            std::mutex m_mutex;
+            {
+                std::lock_guard<std::mutex> guard(m_mutex);
+                CURLcode res = curl_easy_perform(curl);
+                validate(res);
+                curl_easy_cleanup(curl);
+                data = s_data;
+                s_data.clear();
+            }
+            f(data);
+        };
+        thread t(wrapper);
+        t.detach();
     }
 
 
-    void RestClient::validate(CURL *curl){
+    void RestClient::validate(CURL *curl) {
         if (!curl) {
             throw new std::runtime_error("curl_easy_init() failed");
         }
     }
 
-    void  RestClient::validate( CURLcode ret){
+    void RestClient::validate(CURLcode ret) {
         if (ret != CURLE_OK) {
             std::stringstream ss;
             ss << "curl_easy_perform() failed " << curl_easy_strerror(ret) << std::endl;
