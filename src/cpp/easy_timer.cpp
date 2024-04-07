@@ -50,7 +50,7 @@ namespace dsj
         
         handle->theThread  = new std::thread( wrapper);
         
-        if ( isDetached == true) {
+        if (isDetached) {
             handle->theThread ->detach();
         }
         
@@ -109,11 +109,6 @@ namespace dsj
     }
 
 
-
-
-
-
-
 template < typename IN, typename OUT>
 std::shared_ptr<TimerHandle2<IN,OUT>>  SetInterval2(std::function<OUT(IN)> f,int delay ,bool isDetached  ) {
 
@@ -158,7 +153,7 @@ std::shared_ptr<TimerHandle2<IN,OUT>>  SetInterval2(std::function<OUT(IN)> f,int
 
     handle->theThread = new std::thread( wrapper );
     
-    if ( isDetached == true) {
+    if (isDetached) {
         handle->theThread->detach();
     }
     
