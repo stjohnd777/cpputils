@@ -31,7 +31,7 @@ TEST_CASE("setUp","[0]" ) {
 }
 
 
-void testPlayNiceSTLBegineEndIterator() {
+void testPlayNiceSTLBeginEndIterator() {
     REQUIRE(container.size() == 10);
     int index = 0;
     for (auto it = begin(container); it != end(container); it++) {
@@ -39,8 +39,8 @@ void testPlayNiceSTLBegineEndIterator() {
         index++;
     }
 }
-TEST_CASE("testPlayNiceSTLBegineEndIterator","[0]" ) {
-    testPlayNiceSTLBegineEndIterator();
+TEST_CASE("testPlayNiceSTLBeginEndIterator","[0]" ) {
+    testPlayNiceSTLBeginEndIterator();
 }
 
 void testPlayNiceSTLForEach() {
