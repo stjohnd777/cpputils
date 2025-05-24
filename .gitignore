@@ -160,4 +160,9 @@ _deps
 # External projects
 *-prefix/
 
+ ../.idea/editor.xml
+ ../build-ubuntu-clion-debug/
+
+
+build-ubuntu-clion-debug
 # End of https://www.toptal.com/developers/gitignore/api/clion,cmake,c++
